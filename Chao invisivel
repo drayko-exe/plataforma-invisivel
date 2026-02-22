@@ -1,0 +1,87 @@
+local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+local ativo = false
+local modoVisivel = false
+local ultimaPlataforma = nil
+
+local tamanhoMapa = 500 -- aumenta se quiser maior
+local tamanhoParte = 8
+
+local pastaPlataformas = Instance.new("Folder")
+pastaPlataformas.Name = "PlataformasInvisiveis"
+pastaPlataformas.Parent = workspace
+
+local function atualizarVisual()
+    for _, parte in pairs(pastaPlataformas:GetChildren()) do
+        if modoVisivel then
+            parte.Transparency = 0.3
+            parte.Material = Enum.Material.Neon
+        else
+            parte.Transparency = 1
+            parte.Material = Enum.Material.Plastic
+        end
+    end
+end
+
+local function criarMapa()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
+
+    local altura = root.Position.Y - 3
+
+    for x = -tamanhoMapa, tamanhoMapa, tamanhoParte do
+        for z = -tamanhoMapa, tamanhoMapa, tamanhoParte do
+            
+            local parte = Instance.new("Part")
+            parte.Size = Vector3.new(tamanhoParte, 1, tamanhoParte)
+            parte.Position = Vector3.new(x, altura, z)
+            parte.Anchored = true
+            parte.CanCollide = true
+
+            if modoVisivel then
+                parte.Transparency = 0.3
+                parte.Material = Enum.Material.Neon
+            else
+                parte.Transparency = 1
+            end
+
+            parte.Parent = pastaPlataformas
+            ultimaPlataforma = parte
+        end
+    end
+end
+
+local function desativar()
+    pastaPlataformas:ClearAllChildren()
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    -- MUDADO PARA A TECLA E
+    if input.KeyCode == Enum.KeyCode.E then
+        ativo = not ativo
+
+        if ativo then
+            criarMapa()
+        else
+            desativar()
+        end
+    end
+
+    if input.KeyCode == Enum.KeyCode.Y then
+        modoVisivel = not modoVisivel
+        atualizarVisual()
+    end
+
+    if input.KeyCode == Enum.KeyCode.U then
+        if ultimaPlataforma then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame =
+                    ultimaPlataforma.CFrame + Vector3.new(0, 3, 0)
+            end
+        end
+    end
+end)
